@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>指导跟踪</title>
+    <link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
+    <script src="js/vue.js"></script>
+    <script src="element-ui/lib/index.js"></script>
+    <script src="js/axios-0.18.0.js"></script>
+</head>
+<body>
+<div id="div">
+    <b style="color: #4e4e4e; font-size: 20px;">指导跟踪</b>
+
+    <!--查询表单-->
+    <el-form :inline="true" :model="instruction" class="demo-form-inline">
+        <el-form-item label="学号">
+            <el-input v-model="instruction.Sid" placeholder="学号"></el-input>
+        </el-form-item>
+
+        <el-form-item>
+            <el-button type="primary" @click="onSubmit">查询</el-button>
+        </el-form-item>
+    </el-form>
+
+    <el-table :data="tableData">
+        <el-table-column prop="isid" label="序号" width="120">
+        </el-table-column>
+        <el-table-column prop="sid" label="学生id号" width="120" v-if="false">
+        </el-table-column>
+        <el-table-column prop="tid" label="老师id号" width="120" v-if="false">
+        </el-table-column>
+        <el-table-column prop="snumber" label="学号" width="120">
+        </el-table-column>
+        <el-table-column prop="content" label="内容" width="120">
+        </el-table-column>
+        <el-table-column prop="time" type="date" label="日期" width="140">
+        </el-table-column>
+
+
+        <el-table-column label="操作" width="180">
+          <template slot-scope="props">
+              <el-button type="primary" @click="showEditInstruction(props.row)">接受</el-button>
+              <el-button type="danger" @click="deleteInstruction(props.row)">删除</el-button>
+          </template>
+        </el-table-column>
+    </el-table>
+
+    <!--
+        分页组件
+          @size-change： 当改变每页条数时触发的函数
+          @current-change：当改变页码时触发的函数
+          current-page ：默认的页码
+          :page-sizes：每页条数选择框中显示的值
+          :page-size : 默认的每页条数
+          layout： 分页组件的布局
+              total（总条数）, sizes(每页条数), prev（上一页）, pager(所有的页码), next(下一页), jumper（跳转页码）
+          :total: 总条数
+    -->
+    <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="pagination.currentPage"
+            :page-sizes="[3,5,8]"
+            :page-size="pagination.pageSize"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="pagination.total">
+    </el-pagination>
+
+
+</div>
+</body>
+<script>
+    new Vue({
+        el:"#div",
+        data:{
+            dialogTableVisible4add: false,  //添加窗口显示状态
+            dialogTableVisible4edit: false, //编辑窗口显示状态
+            tableData:[
+                {
+                    isid:'0',
+                    sid:'1',
+                    tid:'2',
+                    snumber:'123',
+                    content:'好好好好',
+                    time:'2022-6-1'
+                },
+                {
+                    sid:'1',
+                    tid:'2',
+                    snumber:'123',
+                    content:'好好好好',
+                    time:'2022-6-1'
+                },
+                {
+                    sid:'1',
+                    tid:'2',
+                    snumber:'123',
+                    content:'好好好好',
+                    time:'2022-6-1'
+                }
+            ],//表格数据
+            //课题模型
+            instruction:{
+                sid:'',
+                tid:'',
+                snumber:'',
+                content:'',
+                time:'2022-6-1'
+            },
+            pagination: {
+                currentPage: 1, //当前页
+                pageSize: 5,    //每页显示条数
+                total: 0        //总条数
+            },
+            rules: {
+                number: [
+                    {required: true, message: '请输入学号', trigger: 'blur'},
+                    {min: 2, max: 10, message: '长度在 2 到 10 个字符', trigger: 'blur'}
+                ],
+                name: [
+                    {required: true, message: '请输入姓名', trigger: 'blur'},
+                    {min: 2, max: 10, message: '长度在 2 到 10 个字符', trigger: 'blur'}
+                ],
+                birthday: [
+                    {required: true, message: '请选择日期', trigger: 'change'}
+                ],
+                address: [
+                    {required: true, message: '请输入地址', trigger: 'blur'},
+                    {min: 2, max: 200, message: '长度在 2 到 200 个字符', trigger: 'blur'}
+                ],
+            }
+        },
+        methods:{
+            selectByPage(){
+                axios.post("teacherServlet","method=selectByPageInstructionNeed&currentPage="+
+                    this.pagination.currentPage+"&pageSize="+this.pagination.pageSize)
+                    .then(resp=>{
+                        //1.将查询出来的数组给tableData
+                        this.tableData=resp.data.list;
+                        //2.设置分页参数
+                        //当前页
+                        this.pagination.currentPage=resp.data.pageNum;
+                        //总条数
+                        this.pagination.total=resp.data.total;
+
+                    }).catch(error=>{
+                    alert(error);
+                });
+            },
+            showEditInstruction(row){
+                let param = "method=agreeInstruction&isid="+row.isid+
+                    "&currentPage="+this.pagination.currentPage+"&pageSize="+this.pagination.pageSize;
+                axios.post("teacherServlet",param)
+                    .then(resp=>{
+                        //1.将查询出来的数组给tableData
+                        this.tableData=resp.data.list;
+                        //2.设置分页参数
+                        //当前页
+                        this.pagination.currentPage=resp.data.pageNum;
+                        //总条数
+                        this.pagination.total=resp.data.total;
+                    });
+            },
+            deleteInstruction(row){
+                let param = "method=deleteInstruction&isid="+row.isid+
+                    "&currentPage="+this.pagination.currentPage+"&pageSize="+this.pagination.pageSize;
+                axios.post("teacherServlet",param)
+                    .then(resp=>{
+                        //1.将查询出来的数组给tableData
+                        this.tableData=resp.data.list;
+                        //2.设置分页参数
+                        //当前页
+                        this.pagination.currentPage=resp.data.pageNum;
+                        //总条数
+                        this.pagination.total=resp.data.total;
+                    });
+            },
+            onSubmit(){
+                let param = "method=selectInstructionByConditions&snumber="+this.instruction.snumber+
+                    "&currentPage="+this.pagination.currentPage+"&pageSize="+this.pagination.pageSize;
+                axios.post("teacherServlet",param)
+                    .then(resp=>{
+                        //1.将查询出来的数组给tableData
+                        this.tableData=resp.data.list;
+                        //2.设置分页参数
+                        //当前页
+                        this.pagination.currentPage=resp.data.pageNum;
+                        //总条数
+                        this.pagination.total=resp.data.total;
+                    });
+            },
+            //改变每页条数时执行的函数
+            handleSizeChange(pageSize) {
+                //修改分页查询的参数
+                this.pagination.pageSize = pageSize;
+                //重新执行查询
+                this.selectByPage();
+            },
+            //改变页码时执行的函数
+            handleCurrentChange(pageNum) {
+                //修改分页查询的参数
+                this.pagination.currentPage = pageNum;
+                //重新执行查询
+                this.selectByPage();
+            },
+            resetForm(addForm) {
+                //双向绑定，输入的数据都赋值给了instruction， 清空instruction数据
+                this.instruction = {};
+                //清除表单的校验数据
+                this.$refs[addForm].resetFields();
+            }
+        },
+        mounted(){
+            this.selectByPage();
+        }
+    });
+</script>
+</html>

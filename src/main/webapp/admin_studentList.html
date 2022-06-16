@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生列表</title>
+    <link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
+    <script src="js/vue.js"></script>
+    <script src="element-ui/lib/index.js"></script>
+    <script src="js/axios-0.18.0.js"></script>
+</head>
+<body>
+<div id="div">
+    <b style="color: #4e4e4e; font-size: 20px;">学生列表</b>
+    <div style="float: right;">
+        <el-button type="primary" @click="showAddStu">添加学生</el-button>
+    </div>
+    <!--查询表单-->
+    <el-form :inline="true" :model="student" class="demo-form-inline">
+        <el-form-item label="学号">
+            <el-input v-model="student.number" placeholder="学号"></el-input>
+        </el-form-item>
+        <el-form-item label="姓名">
+            <el-input v-model="student.name" placeholder="姓名"></el-input>
+        </el-form-item>
+        <el-form-item label="专业">
+            <el-input v-model="student.major" placeholder="专业"></el-input>
+        </el-form-item>
+        <el-form-item label="课题">
+            <el-select v-model="student.status" placeholder="课题">
+                <el-option label="任意" value="0"></el-option>
+                <el-option label="已选" value="2"></el-option>
+                <el-option label="未选" value="1"></el-option>
+            </el-select>
+        </el-form-item>
+        <el-form-item>
+            <el-button type="primary" @click="onSubmit()">查询</el-button>
+        </el-form-item>
+    </el-form>
+    
+    <el-table :data="tableData">
+        <el-table-column prop="id" label="序号" width="120">
+        </el-table-column>
+        <el-table-column prop="number" label="学号" width="120">
+        </el-table-column>
+        <el-table-column prop="pwd" label="密码" width="120">
+        </el-table-column>
+        <el-table-column prop="name" label="姓名" width="120">
+        </el-table-column>
+        <el-table-column prop="major" label="专业" width="120">
+        </el-table-column>
+        <el-table-column prop="telephone" label="电话" width="140">
+        </el-table-column>
+        <el-table-column prop="grade" label="年级" width="120">
+        </el-table-column>
+        <el-table-column prop="a_class" label="班级" width="120">
+        </el-table-column>
+        <el-table-column prop="nation" label="民族" width="140">
+        </el-table-column>
+        <el-table-column prop="sex" label="性别" width="140">
+        </el-table-column>
+        <el-table-column prop="email" label="邮箱" width="140">
+        </el-table-column>
+        <el-table-column prop="origin" label="籍贯" width="140">
+        </el-table-column>
+        <el-table-column prop="academy" label="学院" width="140">
+        </el-table-column>
+        <el-table-column prop="status" label="状态" width="140">
+        </el-table-column>
+        <el-table-column label="操作" width="180">
+          <template slot-scope="props">
+              <el-button type="primary" @click="showEditStu(props.row)">编辑</el-button>
+              <el-button type="danger" @click="deleteStu(props.row)">删除</el-button>
+          </template>
+        </el-table-column>
+    </el-table>
+
+    <!--
+        分页组件
+          @size-change： 当改变每页条数时触发的函数
+          @current-change：当改变页码时触发的函数
+          current-page ：默认的页码
+          :page-sizes：每页条数选择框中显示的值
+          :page-size : 默认的每页条数
+          layout： 分页组件的布局
+              total（总条数）, sizes(每页条数), prev（上一页）, pager(所有的页码), next(下一页), jumper（跳转页码）
+          :total: 总条数
+    -->
+    <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="pagination.currentPage"
+            :page-sizes="[3,5,8]"
+            :page-size="pagination.pageSize"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="pagination.total">
+    </el-pagination>
+
+    <el-dialog title="添加学生信息" :visible.sync="dialogTableVisible4add" @close="resetForm('addForm')">
+        <!--
+            :model="student": 关联数据
+            :rules: 关联校验规则
+            ref： 在获取表单对象时使用
+        -->
+        <el-form :model="studentAdd" :rules="rules" ref="addForm" label-width="100px" class="demo-ruleForm">
+            <el-form-item label="学号" prop="number">
+                <el-input v-model="studentAdd.number"></el-input>
+            </el-form-item>
+            <el-form-item label="密码" prop="pwd">
+                <el-input v-model="studentAdd.pwd"></el-input>
+            </el-form-item>
+            <el-form-item label="姓名" prop="name">
+                <el-input v-model="studentAdd.name"></el-input>
+            </el-form-item>
+            <el-form-item label="专业">
+                <el-select v-model="studentAdd.major" placeholder="专业">
+                    <el-option label="软件工程" value="软件工程"></el-option>
+                    <el-option label="计算机科学与技术" value="计算机科学与技术"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="电话" prop="telephone">
+                <el-input v-model="studentAdd.telephone"></el-input>
+            </el-form-item>
+            <el-form-item label="年级" prop="grade">
+                <el-input v-model="studentAdd.grade"></el-input>
+            </el-form-item>
+            <el-form-item label="班级" prop="a_class">
+                <el-input v-model="studentAdd.a_class"></el-input>
+            </el-form-item>
+            <el-form-item label="民族" prop="nation">
+                <el-input v-model="studentAdd.nation"></el-input>
+            </el-form-item>
+            <el-form-item label="性别">
+                <el-select v-model="studentAdd.sex" placeholder="性别">
+                    <el-option label="男" value="男"></el-option>
+                    <el-option label="女" value="女"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="邮箱" prop="email">
+                <el-input v-model="studentAdd.email"></el-input>
+            </el-form-item>
+            <el-form-item label="籍贯" prop="origin">
+                <el-input v-model="studentAdd.origin"></el-input>
+            </el-form-item>
+            <el-form-item label="学院">
+                <el-select v-model="studentAdd.academy" placeholder="学院">
+                    <el-option label="信息工程学院" value="信息工程学院"></el-option>
+                    <el-option label="电控学院" value="电控学院"></el-option>
+                </el-select>
+            </el-form-item>
+
+            <el-form-item align="right">
+                <el-button type="primary" @click="addStu()">添加</el-button>
+                <el-button @click="resetForm('addForm')">重置</el-button>
+            </el-form-item>
+        </el-form>
+    </el-dialog>
+
+    <el-dialog title="编辑学生信息" :visible.sync="dialogTableVisible4edit" @close="resetForm('editForm')" >
+        <!--
+            :model="student": 关联数据
+            :rules: 关联校验规则
+            ref： 在获取表单对象时使用
+        -->
+        <el-form :model="editFormData" :rules="rules" ref="editForm" label-width="100px" class="demo-ruleForm">
+            <el-form-item label="学号" prop="number">
+                <el-input v-model="editFormData.number"></el-input>
+            </el-form-item>
+            <el-form-item label="密码" prop="pwd">
+                <el-input v-model="editFormData.pwd"></el-input>
+            </el-form-item>
+            <el-form-item label="姓名" prop="name">
+                <el-input v-model="editFormData.name"></el-input>
+            </el-form-item>
+            <el-form-item label="专业" prop="major">
+                <el-input v-model="editFormData.major"></el-input>
+            </el-form-item>
+            <el-form-item label="电话" prop="telephone">
+                <el-input v-model="editFormData.telephone"></el-input>
+            </el-form-item>
+            <el-form-item label="年级" prop="grade">
+                <el-input v-model="editFormData.grade"></el-input>
+            </el-form-item>
+            <el-form-item label="班级" prop="a_class">
+                <el-input v-model="editFormData.a_class"></el-input>
+            </el-form-item>
+            <el-form-item label="民族" prop="nation">
+                <el-input v-model="editFormData.nation"></el-input>
+            </el-form-item>
+            <el-form-item label="性别">
+                <el-select v-model="editFormData.sex" placeholder="性别">
+                    <el-option label="男" value="男"></el-option>
+                    <el-option label="女" value="女"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="邮箱" prop="email">
+                <el-input v-model="editFormData.email"></el-input>
+            </el-form-item>
+            <el-form-item label="籍贯" prop="origin">
+                <el-input v-model="editFormData.origin"></el-input>
+            </el-form-item>
+            <el-form-item label="学院">
+                <el-select v-model="editFormData.academy" placeholder="学院">
+                    <el-option label="信息工程学院" value="信息工程学院"></el-option>
+                    <el-option label="电控学院" value="电控学院"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="状态">
+                <el-switch v-model="editFormData.status"
+                           active-value="2"
+                           inactive-value="1"></el-switch>
+            </el-form-item>
+
+            <el-form-item align="right">
+                <el-button type="warning" @click="updateStu()">修改</el-button>
+            </el-form-item>
+        </el-form>
+    </el-dialog>
+</div>
+</body>
+<script>
+    new Vue({
+        el:"#div",
+        data:{
+            dialogTableVisible4add: false,  //添加窗口显示状态
+            dialogTableVisible4edit: false, //编辑窗口显示状态
+            tableData:[
+            ],
+            // 教师模型数据
+            student:{
+                id:'',
+                number:'',
+                pwd:'',
+                name:'',
+                photo:'',
+                major:'',
+                telephone:'',
+                grade:'',
+                a_class:'',
+                nation:'',
+                sex:'',
+                email:'',
+                origin:'',
+                academy:'',
+                status:''
+            },
+            studentAdd:{id:'',
+                number:'',
+                pwd:'',
+                name:'',
+                photo:'',
+                major:'',
+                telephone:'',
+                grade:'',
+                a_class:'',
+                nation:'',
+                sex:'',
+                email:'',
+                origin:'',
+                academy:'',
+                status:''
+            },
+            editFormData: {},
+            pagination: {
+                currentPage: 1, //当前页
+                pageSize: 5,    //每页显示条数
+                total: 0        //总条数
+            },
+            rules: {
+                number: [
+                    {required: true, message: '请输入学号', trigger: 'blur'},
+                    {min: 2, max: 10, message: '长度在 2 到 10 个字符', trigger: 'blur'}
+                ],
+                name: [
+                    {required: true, message: '请输入姓名', trigger: 'blur'},
+                    {min: 2, max: 10, message: '长度在 2 到 10 个字符', trigger: 'blur'}
+                ],
+            }
+        },
+        methods:{
+            selectByPage(){
+                axios.post("adminStudentServlet","method=selectByPage&currentPage="+
+                    this.pagination.currentPage+"&pageSize="+this.pagination.pageSize)
+                    .then(resp=>{
+                        //1.将查询出来的数组给tableData
+                        this.tableData=resp.data.list;
+                        //2.设置分页参数
+                        //当前页
+                        this.pagination.currentPage=resp.data.pageNum;
+                        //总条数
+                        this.pagination.total=resp.data.total;
+
+                    });
+            },
+            //改变每页条数时执行的函数
+            handleSizeChange(pageSize) {
+                //修改分页查询的参数
+                this.pagination.pageSize = pageSize;
+                //重新执行查询
+                this.selectByPage();
+            },
+            //改变页码时执行的函数
+            handleCurrentChange(pageNum) {
+                //修改分页查询的参数
+                this.pagination.currentPage = pageNum;
+                //重新执行查询
+                this.selectByPage();
+            },
+            showAddStu() {
+                //弹出窗口
+                this.dialogTableVisible4add = true;
+            },
+            resetForm(addForm) {
+                //双向绑定，输入的数据都赋值给了student， 清空student数据
+                this.student = {};
+                //清除表单的校验数据
+                this.$refs[addForm].resetFields();
+            },
+            showEditStu(row) {
+                //1. 弹出窗口
+                this.dialogTableVisible4edit = true;
+
+                //2. 显示表单数据
+                this.editFormData = {
+                    id:'',
+                    number:row.number,
+                    pwd:row.pwd,
+                    name:row.name,
+                    major:row.major,
+                    telephone:row.telephone,
+                    grade:row.grade,
+                    a_class:row.a_class,
+                    nation:row.nation,
+                    sex:row.sex,
+                    email:row.email,
+                    origin:row.origin,
+                    academy:row.academy,
+                    status:row.status
+                }
+            },
+            addStu(){
+                let param = "method=addStu&id="+this.studentAdd.id+
+                    "&number="+this.studentAdd.number+
+                    "&pwd="+this.studentAdd.pwd+
+                    "&name="+this.studentAdd.name+
+                    "&major="+this.studentAdd.major+
+                    "&telephone="+this.studentAdd.telephone+
+                    "&grade="+this.studentAdd.grade+
+                    "&a_class="+this.studentAdd.a_class+
+                    "&nation="+this.studentAdd.nation+
+                    "&sex="+this.studentAdd.sex+
+                    "&email="+this.studentAdd.email+
+                    "&origin="+this.studentAdd.origin+
+                    "&academy="+this.studentAdd.academy+
+                    "&status="+this.studentAdd.status+
+                    "&currentPage="+this.pagination.currentPage+"&pageSize="+this.pagination.pageSize;
+                axios.post("adminStudentServlet",param)
+                    .then(resp=>{
+                        //1.将查询出来的数组给tableData
+                        this.tableData=resp.data.list;
+                        //2.设置分页参数
+                        //当前页
+                        this.pagination.currentPage=resp.data.pageNum;
+                        //总条数
+                        this.pagination.total=resp.data.total;
+                    });
+                //关闭窗口
+                this.dialogTableVisible4add = false;
+            },
+            deleteStu(row){
+                if(confirm("确定删除学号为："+row.number+"的数据？")){
+                    let param="method=deleteStu&number="+row.number+
+                        "&currentPage="+this.pagination.currentPage+"&pageSize="+this.pagination.pageSize;
+                    axios.post("adminStudentServlet",param)
+                        .then(resp=>{
+                            //1.将查询出来的数组给tableData
+                            this.tableData=resp.data.list;
+                            //2.设置分页参数
+                            //当前页
+                            this.pagination.currentPage=resp.data.pageNum;
+                            //总条数
+                            this.pagination.total=resp.data.total;
+                        });
+                }
+
+            },
+            updateStu(){
+                let param = "method=updateStu&id="+this.editFormData.id+
+                    "&number="+this.editFormData.number+
+                    "&pwd="+this.editFormData.pwd+
+                    "&name="+this.editFormData.name+
+                    "&major="+this.editFormData.major+
+                    "&telephone="+this.editFormData.telephone+
+                    "&grade="+this.editFormData.grade+
+                    "&a_class="+this.editFormData.a_class+
+                    "&nation="+this.editFormData.nation+
+                    "&sex="+this.editFormData.sex+
+                    "&email="+this.editFormData.email+
+                    "&origin="+this.editFormData.origin+
+                    "&academy="+this.editFormData.academy+
+                    "&status="+this.editFormData.status+
+                    "&currentPage="+this.pagination.currentPage+"&pageSize="+this.pagination.pageSize;
+                axios.post("adminStudentServlet",param)
+                    .then(resp=>{
+                        //1.将查询出来的数组给tableData
+                        this.tableData=resp.data.list;
+                        //2.设置分页参数
+                        //当前页
+                        this.pagination.currentPage=resp.data.pageNum;
+                        //总条数
+                        this.pagination.total=resp.data.total;
+                    });
+                //关闭窗口
+                this.dialogTableVisible4edit = false;
+            },
+            onSubmit() {
+                let param = "method=selectByConditions&id="+this.student.id+
+                    "&number="+this.student.number+
+                    "&pwd"+this.student.pwd+
+                    "&name="+this.student.name+
+                    "&major="+this.student.major+
+                    "&telephone="+this.student.telephone+
+                    "&grade="+this.student.grade+
+                    "&a_class="+this.student.a_class+
+                    "&nation="+this.student.nation+
+                    "&sex="+this.student.sex+
+                    "&email="+this.student.email+
+                    "&origin="+this.student.origin+
+                    "&academy="+this.student.academy+
+                    "&status="+this.student.status+
+                    "&currentPage="+this.pagination.currentPage+"&pageSize="+this.pagination.pageSize;
+                axios.post("adminStudentServlet",param)
+                    .then(resp=>{
+                        //1.将查询出来的数组给tableData
+                        this.tableData=resp.data.list;
+                        //2.设置分页参数
+                        //当前页
+                        this.pagination.currentPage=resp.data.pageNum;
+                        //总条数
+                        this.pagination.total=resp.data.total;
+                    });
+            },
+        },
+        mounted(){
+            this.selectByPage();
+        }
+    });
+</script>
+</html>

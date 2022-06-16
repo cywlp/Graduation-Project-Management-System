@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生管理系统</title>
+    <link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
+    <script src="js/vue.js"></script>
+    <script src="element-ui/lib/index.js"></script>
+    <style>
+        .el-header{
+            background-color: #545c64;
+        }
+        .header-img{
+            width: 100px;
+            margin-top:20px;
+        }
+    </style>
+</head>
+<body>
+<div id="div">
+    <el-container>
+        <!-- 头部-->
+        <el-header class="el-header">
+            <el-container>
+                <div>
+                    <el-image src="img/export.png" class="header-img"></el-image>
+                </div>
+                <el-menu
+                    :default-active="activeIndex2"
+                    mode="horizontal"
+                    @select="handleSelect"
+                    background-color="#545c64"
+                    text-color="white"
+                    active-text-color="#ffd04b"
+                    style="margin-left: auto;">
+                    <el-menu-item index="1">处理中心</el-menu-item>
+                    <el-submenu index="2">
+                        <template slot="title">我的工作台</template>
+                        <el-menu-item index="2-1">选项1</el-menu-item>
+                        <el-menu-item index="2-2">选项2</el-menu-item>
+                        <el-menu-item index="2-3">选项3</el-menu-item>
+                    </el-submenu>
+                    <el-menu-item index="3"><a href="old/index.html" target="_self">首页</a></el-menu-item>
+                </el-menu>
+            </el-container>
+        </el-header>
+
+        <!-- 中间部分 -->
+        <el-container style="height: 580px; border: 1px solid #eee">
+            <!-- 侧边栏 -->
+            <el-aside width="200px" style="background-color: rgb(238, 241, 246)">
+              <el-menu >
+                <el-submenu index="1">
+                  <template slot="title"><i class="el-icon-menu"></i>课题管理</template>
+                  <el-menu-item-group>
+                      <el-menu-item index="1-1" @click="findHistoryProjectList"><i class="el-icon-help"></i>已出课题</el-menu-item>
+                    <el-menu-item index="1-2" @click="findApplyList"><i class="el-icon-help"></i>课题双选</el-menu-item>
+                    <el-menu-item index="1-3" @click="findProjectList"><i class="el-icon-help"></i>正在进行</el-menu-item>
+                  </el-menu-item-group>
+                </el-submenu>
+                <el-submenu index="2">
+                    <template slot="title"><i class="el-icon-menu"></i>指导跟踪</template>
+                    <el-menu-item-group>
+                      <el-menu-item index="2-1" @click="findHistoryInstruction()"><i class="el-icon-help"></i>历史记录</el-menu-item>
+                      <el-menu-item index="2-2" @click="findInstruction()"><i class="el-icon-help" ></i>确认指导</el-menu-item>
+                    </el-menu-item-group>
+                  </el-submenu>
+                  <el-submenu index="3">
+                    <template slot="title"><i class="el-icon-menu"></i>成绩录入</template>
+                    <el-menu-item-group>
+                      <el-menu-item index="3-1" @click="findProjectList2TeacherGrade()"><i class="el-icon-help"></i>指导教师评分</el-menu-item>
+                      <el-menu-item index="3-2" @click="findProjectList2ReviewerGrade()"><i class="el-icon-help"></i>评阅教师评分</el-menu-item>
+                      <el-menu-item index="3-3" @click="findProjectList2ReplyGrade()"><i class="el-icon-help"></i>毕业答辩小组评分</el-menu-item>
+<!--                        <el-menu-item index="3-4" @click="findProjectList2Grade()"><i class="el-icon-help"></i>成绩评定书</el-menu-item>-->
+                    </el-menu-item-group>
+                  </el-submenu>
+              </el-menu>
+            </el-aside>
+
+            <el-container>
+              <!-- 主区域部分 -->
+              <el-main>
+                  <iframe :src="iframeSrc" frameborder="false" style="top:80px;left: 120px; width: 100%;height:500px"></iframe>
+              </el-main>
+            </el-container>
+          </el-container>
+    </el-container>
+</div>
+</body>
+<script>
+    new Vue({
+        el:"#div",
+        data: {
+            iframeSrc: "welcome.jsp"
+        },
+        methods:{
+            findHistoryProjectList:function () {
+                //完成
+                this.iframeSrc = "teacher_history_projectList.html";
+            },
+            findProjectList:function () {
+                this.iframeSrc = "teacher_projectList.html";
+            },
+            findProjectList2TeacherGrade:function () {
+                this.iframeSrc = "teacher_projectList_TeacherGrade.html";
+            },
+            findProjectList2ReviewerGrade:function () {
+                this.iframeSrc = "teacher_projectList_ReviewerGrade.html";
+            },
+            findProjectList2ReplyGrade:function () {
+                this.iframeSrc = "teacher_projectList_ReplyGrade.html";
+            },
+            findProjectList2Grade:function(){
+                this.iframeSrc = "teacher_total_grade.html";
+            },
+            findApplyList:function () {
+                this.iframeSrc = "teacher_applyList.html";
+            },
+            findHistoryInstruction:function () {
+                this.iframeSrc = "teacher_instructionHistoryList.html"
+            },
+            findInstruction: function () {
+                this.iframeSrc = "teacher_instructionList.html"
+            }
+
+        }
+    });
+</script>
+</html>

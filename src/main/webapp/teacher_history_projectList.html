@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>课题列表</title>
+    <link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
+    <script src="js/vue.js"></script>
+    <script src="element-ui/lib/index.js"></script>
+    <script src="js/axios-0.18.0.js"></script>
+</head>
+<body>
+<div id="div">
+    <b style="color: #4e4e4e; font-size: 20px;">课题列表</b>
+
+    <!--查询表单-->
+    <el-form :inline="true" :model="project" class="demo-form-inline">
+        <el-form-item label="标题">
+            <el-input v-model="project.name" placeholder="标题"></el-input>
+        </el-form-item>
+        <el-form-item label="类型">
+            <el-input v-model="project.type" placeholder="类型"></el-input>
+        </el-form-item>
+        <el-form-item label="年级">
+            <el-input v-model="project.grade" placeholder="年级"></el-input>
+        </el-form-item>
+        <el-form-item label="学院">
+            <el-input v-model="project.scale" placeholder="学院"></el-input>
+        </el-form-item>
+        <el-form-item>
+            <el-button type="primary" @click="onSubmit">查询</el-button>
+        </el-form-item>
+    </el-form>
+    <div style="float: right;">
+        <el-button type="primary" @click="showAddProject()">出题</el-button>
+    </div>
+    <el-table :data="tableData">
+        <el-table-column prop="p_id" label="标号" width="120">
+        </el-table-column>
+        <el-table-column prop="name" label="标题" width="120">
+        </el-table-column>
+        <el-table-column prop="type" label="类型" width="140">
+        </el-table-column>
+        <el-table-column prop="origin" label="来源" width="140">
+        </el-table-column>
+        <el-table-column prop="grade" label="适用年级" width="140">
+        </el-table-column>
+        <el-table-column prop="scale" label="适用学院" width="140">
+        </el-table-column>
+        <el-table-column label="操作" width="180">
+            <template slot-scope="props">
+                <el-button type="success" @click="showEditProject(props.row)">编辑</el-button>
+<!--                <el-button type="danger" @click="deleteProject(props.row)">删除</el-button>-->
+            </template>
+        </el-table-column>
+    </el-table>
+
+    <!--
+        分页组件
+          @size-change： 当改变每页条数时触发的函数
+          @current-change：当改变页码时触发的函数
+          current-page ：默认的页码
+          :page-sizes：每页条数选择框中显示的值
+          :page-size : 默认的每页条数
+          layout： 分页组件的布局
+              total（总条数）, sizes(每页条数), prev（上一页）, pager(所有的页码), next(下一页), jumper（跳转页码）
+          :total: 总条数
+    -->
+    <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="pagination.currentPage"
+            :page-sizes="[3,5,8]"
+            :page-size="pagination.pageSize"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="pagination.total">
+    </el-pagination>
+
+    <el-dialog title="添加课题信息" :visible.sync="dialogTableVisible4add" @close="resetForm('addForm')">
+        <!--
+            :model="project": 关联数据
+            :rules: 关联校验规则
+            ref： 在获取表单对象时使用
+        -->
+        <el-form :model="projectAdd" :rules="rules" ref="addForm" label-width="100px" class="demo-ruleForm">
+            <el-form-item label="标题" prop="name">
+                <el-input v-model="projectAdd.name"></el-input>
+            </el-form-item>
+            <el-form-item label="类型" prop="type">
+                <el-input v-model="projectAdd.type"></el-input>
+            </el-form-item>
+            <el-form-item label="来源" prop="origin">
+                <el-input v-model="projectAdd.origin"></el-input>
+            </el-form-item>
+            <el-form-item label="课题内容" prop="content">
+                <el-input type="textarea" v-model="projectAdd.content" ></el-input>
+            </el-form-item>
+            <el-form-item label="适用年级" prop="grade">
+                <el-input v-model="projectAdd.grade"></el-input>
+            </el-form-item>
+            <el-form-item label="适用学院" prop="scale">
+                <el-input v-model="projectAdd.scale"></el-input>
+            </el-form-item>
+            <el-form-item label="定向分配学生学号" prop="finalNumber">
+                <el-input v-model="projectAdd.finalNumber"></el-input>
+            </el-form-item>
+            <el-form-item align="right">
+                <el-button type="primary" @click="addProject()">添加</el-button>
+                <el-button @click="resetForm('addForm')">重置</el-button>
+            </el-form-item>
+        </el-form>
+    </el-dialog>
+
+    <el-dialog title="编辑课题信息" :visible.sync="dialogTableVisible4edit" @close="resetForm('editForm')" >
+        <!--
+            :model="project": 关联数据
+            :rules: 关联校验规则
+            ref： 在获取表单对象时使用
+        -->
+        <el-form :model="projectEdit" :rules="rules" ref="editForm" label-width="100px" class="demo-ruleForm">
+
+            <el-form-item label="标题" prop="name">
+                <el-input v-model="projectEdit.name"></el-input>
+            </el-form-item>
+            <el-form-item label="类型" prop="type">
+                <el-input v-model="projectEdit.type"></el-input>
+            </el-form-item>
+            <el-form-item label="来源" prop="origin">
+                <el-input v-model="projectEdit.origin"></el-input>
+            </el-form-item>
+            <el-form-item type="textarea" label="内容" prop="content">
+                <el-input type="textarea" v-model="projectEdit.content"></el-input>
+            </el-form-item>
+            <el-form-item label="适用年级" prop="grade">
+                <el-input v-model="projectEdit.grade"></el-input>
+            </el-form-item>
+            <el-form-item label="适用学院" prop="scale">
+                <el-input v-model="projectEdit.scale"></el-input>
+            </el-form-item>
+            <el-form-item align="right">
+                <el-button type="primary" @click="updateProject()">修改</el-button>
+            </el-form-item>
+        </el-form>
+    </el-dialog>
+</div>
+</body>
+<script>
+    new Vue({
+        el:"#div",
+        data:{
+            dialogTableVisible4add: false,  //添加窗口显示状态
+            dialogTableVisible4edit: false, //编辑窗口显示状态
+            tableData:[
+                {
+                    p_id: '1',
+                    name: '人脸识别',
+                    type: '实践',
+                    origin: '国家级课题',
+                    grade:'2019',
+                    scale: '信息工程学院'
+                },
+                {
+                    p_id: '1',
+                    name: '人脸识别',
+                    type: '实践',
+                    origin: '国家级课题',
+                    grade:'2019',
+                    scale: '信息工程学院'
+                },
+                {
+                    p_id: '1',
+                    name: '人脸识别',
+                    type: '实践',
+                    origin: '国家级课题',
+                    grade:'2019',
+                    scale: '信息工程学院'
+                }
+            ],//表格数据
+            //课题模型
+            project:{
+                name:'',
+                type:'',
+                grade:'',
+                scale:''
+            },
+            projectEdit:{},
+            projectAdd:{
+                name:'',
+                type:'',
+                origin:'',
+                content:'',
+                grade:'',
+                scale:'',
+                finalNumber:''
+            },
+            pagination: {
+                currentPage: 1, //当前页
+                pageSize: 5,    //每页显示条数
+                total: 0        //总条数
+            },
+            rules: {
+                number: [
+                    {required: true, message: '请输入学号', trigger: 'blur'},
+                    {min: 2, max: 10, message: '长度在 2 到 10 个字符', trigger: 'blur'}
+                ],
+                name: [
+                    {required: true, message: '请输入姓名', trigger: 'blur'},
+                    {min: 2, max: 10, message: '长度在 2 到 10 个字符', trigger: 'blur'}
+                ],
+                birthday: [
+                    {required: true, message: '请选择日期', trigger: 'change'}
+                ],
+                address: [
+                    {required: true, message: '请输入地址', trigger: 'blur'},
+                    {min: 2, max: 200, message: '长度在 2 到 200 个字符', trigger: 'blur'}
+                ],
+            }
+        },
+        methods:{
+            selectByPage(){
+                axios.post("teacherServlet","method=selectByPageProject&currentPage="+
+                    this.pagination.currentPage+"&pageSize="+this.pagination.pageSize)
+                    .then(resp=>{
+                        //1.将查询出来的数组给tableData
+                        this.tableData=resp.data.list;
+                        //2.设置分页参数
+                        //当前页
+                        this.pagination.currentPage=resp.data.pageNum;
+                        //总条数
+                        this.pagination.total=resp.data.total;
+
+                    }).catch(error=>{
+                        alert(error);
+                });
+            },
+            onSubmit(){
+                let param = "method=selectProjectByConditions&name="+this.project.name+
+                    "&type="+this.project.type+
+                    "&grade="+this.project.grade+
+                    "&scale="+this.project.scale+
+                    "&currentPage="+this.pagination.currentPage+"&pageSize="+this.pagination.pageSize;
+                axios.post("teacherServlet",param)
+                    .then(resp=>{
+                        //1.将查询出来的数组给tableData
+                        this.tableData=resp.data.list;
+                        //2.设置分页参数
+                        //当前页
+                        this.pagination.currentPage=resp.data.pageNum;
+                        //总条数
+                        this.pagination.total=resp.data.total;
+                    });
+                project.name='';
+                project.type='';
+                project.grade='';
+                project.scale='';
+            },
+            //改变每页条数时执行的函数
+            handleSizeChange(pageSize) {
+                //修改分页查询的参数
+                this.pagination.pageSize = pageSize;
+                //重新执行查询
+                this.selectByPage();
+            },
+            //改变页码时执行的函数
+            handleCurrentChange(pageNum) {
+                //修改分页查询的参数
+                this.pagination.currentPage = pageNum;
+                //重新执行查询
+                this.selectByPage();
+            },
+            addProject(){
+                alert("点我了");
+                let param = "method=addProject&name="+this.projectAdd.name+
+                    "&type="+this.projectAdd.type+
+                    "&grade="+this.projectAdd.grade+
+                    "&scale="+this.projectAdd.scale+
+                    "&origin="+this.projectAdd.origin+
+                    "&content="+this.projectAdd.content+
+                    "&finalNumber="+this.projectAdd.finalNumber+
+                    "&currentPage="+this.pagination.currentPage+"&pageSize="+this.pagination.pageSize;
+                axios.post("teacherServlet",param)
+                    .then(resp=>{
+                        //1.将查询出来的数组给tableData
+                        this.tableData=resp.data.list;
+                        //2.设置分页参数
+                        //当前页
+                        this.pagination.currentPage=resp.data.pageNum;
+                        //总条数
+                        this.pagination.total=resp.data.total;
+
+                    }).catch(error=>{
+                    alert(error)
+                });
+                this.dialogTableVisible4add = false;
+            },
+            showAddProject() {
+                //弹出窗口
+                this.dialogTableVisible4add = true;
+            },
+            resetForm(addForm) {
+                //双向绑定，输入的数据都赋值给了project， 清空project数据
+                this.project = {};
+                //清除表单的校验数据
+                this.$refs[addForm].resetFields();
+            },
+            showEditProject(row) {
+                //1. 弹出窗口
+                this.dialogTableVisible4edit = true;
+
+                let param = "method=selectProjectContentByPid&p_id="+row.p_id+
+                    "&currentPage="+this.pagination.currentPage+"&pageSize="+this.pagination.pageSize;
+                axios.post("teacherServlet",param)
+                    .then(resp=>{
+                        this.projectEdit = {
+                            p_id:row.p_id,
+                            name:row.name,
+                            type:row.type,
+                            grade:row.grade,
+                            scale:row.scale,
+                            origin:resp.data.origin,
+                            content:resp.data.content
+                        }
+                    }).catch(error=>{
+                        alert(error);
+                });
+
+            },
+            updateProject(){
+                let param = "method=updateProject&name="+this.projectEdit.name+
+                    "&p_id="+this.projectEdit.p_id+
+                    "&type="+this.projectEdit.type+
+                    "&grade="+this.projectEdit.grade+
+                    "&scale="+this.projectEdit.scale+
+                    "&origin="+this.projectEdit.origin+
+                    "&content="+this.projectEdit.content+
+                    "&currentPage="+this.pagination.currentPage+"&pageSize="+this.pagination.pageSize;
+                axios.post("teacherServlet",param)
+                    .then(resp=>{
+                        //1.将查询出来的数组给tableData
+                        this.tableData=resp.data.list;
+                        //2.设置分页参数
+                        //当前页
+                        this.pagination.currentPage=resp.data.pageNum;
+                        //总条数
+                        this.pagination.total=resp.data.total;
+                        this.dialogTableVisible4edit = false;
+                    }).catch(error=>{
+                });
+            }
+        },
+        mounted(){
+            this.selectByPage();
+        }
+    });
+</script>
+</html>

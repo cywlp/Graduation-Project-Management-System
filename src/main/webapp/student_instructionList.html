@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>指导跟踪</title>
+    <link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
+    <script src="js/vue.js"></script>
+    <script src="element-ui/lib/index.js"></script>
+    <script src="js/axios-0.18.0.js"></script>
+</head>
+<body>
+<div id="div">
+    <b style="color: #4e4e4e; font-size: 20px;">指导跟踪</b>
+
+    <div style="float: right;">
+        <el-button type="primary" @click="showAddInstruction">申请指导</el-button>
+    </div>
+
+    <!--查询表单-->
+    <el-form :inline="true" :model="instruction" class="demo-form-inline">
+        <el-form-item label="内容">
+            <el-input v-model="instruction.content" placeholder="内容"></el-input>
+        </el-form-item>
+        <el-form-item>
+            <el-button type="primary" @click="onSubmit">查询</el-button>
+        </el-form-item>
+    </el-form>
+
+    <el-table :data="tableData">
+        <el-table-column prop="sid" label="学号" width="120">
+        </el-table-column>
+        <el-table-column prop="content" label="内容" width="120">
+        </el-table-column>
+        <el-table-column prop="time" type="date" label="日期" width="140">
+        </el-table-column>
+    </el-table>
+
+    <!--
+        分页组件
+          @size-change： 当改变每页条数时触发的函数
+          @current-change：当改变页码时触发的函数
+          current-page ：默认的页码
+          :page-sizes：每页条数选择框中显示的值
+          :page-size : 默认的每页条数
+          layout： 分页组件的布局
+              total（总条数）, sizes(每页条数), prev（上一页）, pager(所有的页码), next(下一页), jumper（跳转页码）
+          :total: 总条数
+    -->
+    <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="pagination.currentPage"
+            :page-sizes="[3,5,8]"
+            :page-size="pagination.pageSize"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="pagination.total">
+    </el-pagination>
+
+    <el-dialog title="申请指导" :visible.sync="dialogTableVisible4add" @close="resetForm('addForm')">
+        <!--
+            :model="instruction": 关联数据
+            :rules: 关联校验规则
+            ref： 在获取表单对象时使用
+        -->
+        <el-form :model="instruction" :rules="rules" ref="addForm" label-width="100px" class="demo-ruleForm">
+            <el-form-item label="内容" prop="content">
+                <el-input v-model="instruction.content"></el-input>
+            </el-form-item>
+            <el-form-item label="时间">
+                <el-input v-model="instruction.time" type="date"></el-input>
+            </el-form-item>
+            <el-form-item align="right">
+                <el-button type="primary" @click="addInstruction()">申请</el-button>
+                <el-button @click="resetForm('addForm')">重置</el-button>
+            </el-form-item>
+        </el-form>
+    </el-dialog>
+</div>
+</body>
+<script>
+    new Vue({
+        el:"#div",
+        data:{
+            dialogTableVisible4add: false,  //添加窗口显示状态
+            dialogTableVisible4edit: false, //编辑窗口显示状态
+            tableData:[
+                {
+                    sid:'123',
+                    content:'好好好好',
+                    time:'2022-6-1'
+                },
+                {
+                    sid:'123',
+                    content:'好好好好',
+                    time:'2022-6-1'
+                },
+                {
+                    sid:'123',
+                    content:'好好好好',
+                    time:'2022-6-1'
+                }
+            ],//表格数据
+            //课题模型
+            instruction:{
+                sid:'',
+                Tid:'',
+                content:'',
+                time:'',
+                isFinished:'1'
+            },
+            pagination: {
+                currentPage: 1, //当前页
+                pageSize: 5,    //每页显示条数
+                total: 0        //总条数
+            },
+            rules: {
+                number: [
+                    {required: true, message: '请输入学号', trigger: 'blur'},
+                    {min: 2, max: 10, message: '长度在 2 到 10 个字符', trigger: 'blur'}
+                ],
+                name: [
+                    {required: true, message: '请输入姓名', trigger: 'blur'},
+                    {min: 2, max: 10, message: '长度在 2 到 10 个字符', trigger: 'blur'}
+                ],
+                birthday: [
+                    {required: true, message: '请选择日期', trigger: 'change'}
+                ],
+                address: [
+                    {required: true, message: '请输入地址', trigger: 'blur'},
+                    {min: 2, max: 200, message: '长度在 2 到 200 个字符', trigger: 'blur'}
+                ],
+            }
+        },
+        methods:{
+
+            addInstruction(){
+                let param = "method=addInstruction"+
+                    "&sid="+this.instruction.sid+
+                    "&content="+this.instruction.content+
+                    "&time="+this.instruction.time;
+                axios.post("studentServlet",param)
+                    .then(resp=>{
+                        alert(resp.data);
+                        this.dialogTableVisible4add = false;
+                        this.selectByPage();
+                    });
+            },
+
+            selectByPage(){
+                let param = "method=selectInstructionList"+
+                    "&currentPage="+this.pagination.currentPage+"&pageSize="+this.pagination.pageSize;
+                axios.post("studentServlet",param)
+                    .then(resp=>{
+                        //1.将查询出来的数组给tableData
+                        this.tableData=resp.data.list;
+                        //2.设置分页参数
+                        //当前页
+                        this.pagination.currentPage=resp.data.pageNum;
+                        //总条数
+                        this.pagination.total=resp.data.total;
+
+                    });
+            },
+
+            onSubmit() {
+                let param = "method=selectInstructionByConditions"+
+                    "&content="+this.instruction.content+
+                    "&currentPage="+this.pagination.currentPage+"&pageSize="+this.pagination.pageSize;
+                axios.post("studentServlet",param)
+                    .then(resp=>{
+                        //1.将查询出来的数组给tableData
+                        this.tableData=resp.data.list;
+                        //2.设置分页参数
+                        //当前页
+                        this.pagination.currentPage=resp.data.pageNum;
+                        //总条数
+                        this.pagination.total=resp.data.total;
+                    });
+            },
+
+            //改变每页条数时执行的函数
+            handleSizeChange(pageSize) {
+                //修改分页查询的参数
+                this.pagination.pageSize = pageSize;
+                //重新执行查询
+                this.selectByPage();
+            },
+            //改变页码时执行的函数
+            handleCurrentChange(pageNum) {
+                //修改分页查询的参数
+                this.pagination.currentPage = pageNum;
+                //重新执行查询
+                this.selectByPage();
+            },
+            showAddInstruction() {
+                //弹出窗口
+                this.dialogTableVisible4add = true;
+            },
+            resetForm(addForm) {
+                //双向绑定，输入的数据都赋值给了instruction， 清空instruction数据
+                this.instruction = {};
+                //清除表单的校验数据
+                this.$refs[addForm].resetFields();
+            },
+            showEditInstruction(row) {
+                //1. 弹出窗口
+                this.dialogTableVisible4edit = true;
+
+                //2. 显示表单数据
+                this.editinstruction = {
+                    number:row.number,
+                    name:row.name,
+                    birthday:row.birthday,
+                    address:row.address,
+                }
+            }
+        },
+        mounted(){
+            this.selectByPage();
+        }
+    });
+</script>
+</html>

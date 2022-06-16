@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>登录页面</title>
+    <link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
+    <script src="js/vue.js" type="text/javascript"></script>
+    <script src="js/axios-0.18.0.js" type="text/javascript"></script>
+    <script src="element-ui/lib/index.js"></script>
+    <style lang="scss" scoped>
+        .login-box {
+            border: 1px solid #DCDFE6;
+            width: 350px;
+            margin: 120px auto;
+            padding: 35px 35px 15px 35px;
+            border-radius: 5px;
+            -webkit-border-radius: 5px;
+            -moz-border-radius: 5px;
+            box-shadow: 0 0 25px #909399;
+        }
+
+        .login-title {
+            text-align: center;
+            margin: 0 auto 40px auto;
+            color: #303133;
+        }
+    </style>
+    <style type="text/css">
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th {
+            height: 50px;
+        }
+        th, td {
+            padding: 15px;
+            text-align: left;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        tr:nth-child(even) {background-color: #f2f2f2;}
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 12px 20px;
+            box-sizing: border-box;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            background-color: #f8f8f8;
+            resize: none;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id="app">
+
+    <t1>成绩评定表（指导教师用）</t1>
+    <el-form :inline="true" :model="form" class="demo-form-inline" label-width="80px">
+        <el-form-item label="学生姓名">
+            <el-input v-model="form.name" placeholder="学生姓名" :disabled="true"></el-input>
+        </el-form-item>
+        <el-form-item label="专业">
+            <el-input v-model="form.major" placeholder="专业" disabled="true"></el-input>
+        </el-form-item>
+        <el-form-item label="班级">
+            <el-input v-model="form.a_class" placeholder="班级" disabled="true"></el-input>
+        </el-form-item>
+    </el-form>
+
+    <el-form ref="form" :model="form" label-width="80px">
+        <el-form-item label="课题名称">
+            <el-input v-model="form.project" placeholder="课题名称" :disabled="true"></el-input>
+        </el-form-item>
+    </el-form>
+    <table border="1">
+        <tr>
+            <td>序号</td>
+            <td>评价内容</td>
+            <td>指标</td>
+            <td>满分</td>
+            <td>分数</td>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>工作量、工作态度</td>
+            <td>按期圆满完成规定的任务，难易程度和工作量符合教学要求；工作努力，遵守纪律；工作作风严谨务实；善于与他人合作。</td>
+            <td>20</td>
+            <td><input type="text" name="grade1" v-model="g1">  </td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>调查论证</td>
+            <td>能独立查阅文献和调研；能较好地作出开题报告；有综合、收集和正确利用各种信息及获取新知识的能力。</td>
+            <td>10</td>
+            <td><input type="text" name="grade2" v-model="g2">  </td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td>译文和利用资料</td>
+            <td>查阅文献有一定广泛性；翻译外文资料准确、通顺、文笔流畅；译文数量符合要求。</td>
+            <td>5</td>
+            <td><input type="text" name="grade3" v-model="g3">  </td>
+        </tr>
+        <tr>
+            <td>4</td>
+            <td>设计、计算、论证、推导</td>
+            <td>综合分析科学，方案设计合理，推导正确，计算准确，论据可靠，论证充分；结构合理、工艺可行；图样绘制与技术要求符合国家标准及要求。</td>
+            <td>45</td>
+            <td><input type="text" name="grade4" v-model="g4">  </td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td>设计说明书</td>
+            <td>条理清楚，文理通顺，技术用语准确、规范；图表完备、正确；书写格式规范。</td>
+            <td>15</td>
+            <td><input type="text" name="grade5" v-model="g5">  </td>
+        </tr>
+        <tr>
+            <td>6</td>
+            <td>创 新</td>
+            <td>工作中有创新意识；对前人工作有改进、突破或有独特见解，有一定应用价值。</td>
+            <td>5</td>
+            <td><input type="text" name="grade6" v-model="g6"> </td>
+        </tr>
+        <tr>
+            <td colspan="3">是否同意答辩：<input type="radio" name="agree"  value="yes"  v-model="agree">同意
+                <input type="radio" name="agree"  value="no" v-model="agree" >拒绝
+                <p>{{agree}}</p>
+            </td>
+            <td>总分:</td>
+            <td><input type="text" name="grade" v-model="g"><br>
+                <p></p>
+                <el-row>
+                    <el-button type="info" @click="getSum()">计算总分</el-button>
+                </el-row>
+            </td>
+        </tr>
+        <tr>
+            <td>评语:</td>
+            <td colspan="4"><textarea name="comment" v-model="comment"></textarea> </td>
+        </tr>
+        <td> 指导教师：</td>
+        <td colspan="2"><input type="text" name="teacher" v-model="teacher"></input> </td>
+        <td>日期</td>
+        <td ><input type="text" name="time" v-model="time"></input> </td>
+    </table>
+    <p></p>
+    <el-row>
+    <div style="float: right;">
+        <el-button type="info" @click="jump()">提交</el-button>
+    </div>
+</div>
+</body>
+<script>
+    new Vue({
+        el: "#app",
+        data: {
+
+                g1:'',
+                g2:'',
+                g3:'',
+                g4:'',
+                g5:'',
+                g6:'',
+                g:'',
+                agree:'yes',
+                comment:'好好好好',
+                teacher:'张三',
+                time:'2022.06/07',
+
+            form: {
+                name: '王佳宝',
+                major: '软件工程',
+                a_class: '2019240207',
+                project: '基于红外识别的室内自动消毒杀菌系统'
+            },
+            grade:'',
+            tableData: [{
+                id: '1',
+                content: '工作量、工作态度\n',
+                example: '按期圆满完成规定的任务，难易程度和工作量符合教学要求；工作努力，遵守纪律；工作作风严谨务实；善于与他人合作。',
+                full: '20',
+                real: '11'
+            }, {
+                id: '2',
+                content: '调查论证',
+                example: '能独立查阅文献和调研；能较好地作出开题报告；有综合、收集和正确利用各种信息及获取新知识的能力。',
+                full: '10',
+                real: '9'
+            }, {
+                id: '3',
+                content: '译文和利用资料',
+                example: '查阅文献有一定广泛性；翻译外文资料准确、通顺、文笔流畅；译文数量符合要求。',
+                full: '5',
+                real: '4'
+            }, {
+                id: '4',
+                content: '设计、计算、论证、推导',
+                example: '综合分析科学，方案设计合理，推导正确，计算准确，论据可靠，论证充分；结构合理、工艺可行；图样绘制与技术要求符合国家标准及要求。',
+                full: '45',
+                real: '33'
+            }, {
+                id: '5',
+                content: '设计说明书',
+                example: '条理清楚，文理通顺，技术用语准确、规范；图表完备、正确；书写格式规范。',
+                full: '15',
+                real: '12'
+            }, {
+                id: '6',
+                content: '创  新',
+                example: '工作中有创新意识；对前人工作有改进、突破或有独特见解，有一定应用价值。',
+                full: '5',
+                real: '2'
+            }]
+        },
+        methods: {
+            tableRowClassName({row, rowIndex}) {
+                if (rowIndex === 1) {
+                    return 'warning-row';
+                } else if (rowIndex === 3) {
+                    return 'success-row';
+                }
+                return '';
+            },
+            getSum(){
+              this.g=
+                Number(this.g1)+
+                Number(this.g2)+
+                Number(this.g3)+
+                Number(this.g4)+
+                Number(this.g5)+
+                Number(this.g6);
+            },
+            show(){
+                alert(grade5)
+            },
+            jump(){
+                // g1:'',
+                //     g2:'',
+                //     g3:'',
+                //     g4:'',
+                //     g5:'',
+                //     g6:'',
+                //     g:'',
+                //     agree:'yes',
+                //     comment:'好好好好',
+                //     teacher:'张三',
+                //     time:'2022.06/07',
+                let param = "method=setTeacherGrade"+
+                    "&g1="+this.g1+
+                    "&g2="+this.g2+
+                    "&g3="+this.g3+
+                    "&g4="+this.g4+
+                    "&g5="+this.g5+
+                    "&g6="+this.g6+
+                    "&g="+this.g+
+                    "&agree="+this.agree+
+                    "&comment="+this.comment+
+                    "&teacher="+this.teacher+
+                    "&time="+this.time;
+                axios.post("teacherServlet",param)
+                    .then(resp=>{
+                        alert("评分成功");
+                    }).catch(error=>{
+                    alert(error);
+                });
+                window.location.href="teacher_projectList_TeacherGrade.html"
+            },
+            getData(){
+                axios.post("teacherServlet","method=getData")
+                    .then(resp=>{
+                        //1.将查询出来的数组给tableData
+                        this.form=resp.data;
+                    }).catch(error=>{
+                    alert(error);
+                });
+            },
+            selectGrade(){
+                let param = "method=selectInstructorGrade";
+                axios.post("teacherServlet",param)
+                    .then(resp=>{
+                        this.g1 = resp.data.ig_workload;
+                        this.g2 = resp.data.ig_investigate;
+                        this.g3 = resp.data.ig_information;
+                        this.g4 = resp.data.ig_comprehension;
+                        this.g5 = resp.data.ig_design;
+                        this.g6 = resp.data.ig_innovation;
+                        this.g = resp.data.ig_sum;
+                        this.agree = resp.data.ig_agree;
+                        this.comment = resp.data.ig_comment;
+                        this.teacher = resp.data.ig_person;
+                        this.time = resp.data.ig_date;
+
+                    });
+            }
+        },
+        mounted(){
+            this.getData();
+            this.selectGrade();
+        }
+    });
+</script>
+</html>

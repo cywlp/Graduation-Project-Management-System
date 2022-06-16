@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+
+<head>
+    <meta charset="UTF-8">
+    <title>登录页面</title>
+    <link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
+    <script src="js/vue.js" type="text/javascript"></script>
+    <script src="js/axios-0.18.0.js" type="text/javascript"></script>
+    <script src="element-ui/lib/index.js"></script>
+    <style lang="scss" scoped>
+        .login-box {
+            border: 1px solid #DCDFE6;
+            width: 350px;
+            margin: 120px auto;
+            padding: 35px 35px 15px 35px;
+            border-radius: 5px;
+            -webkit-border-radius: 5px;
+            -moz-border-radius: 5px;
+            box-shadow: 0 0 25px #909399;
+        }
+
+        .login-title {
+            text-align: center;
+            margin: 0 auto 40px auto;
+            color: #303133;
+        }
+        p {margin:1em 0;}
+        input{
+            border: 1px solid #ccc;
+            padding: 4px 0px;
+            border-radius: 3px;
+            padding-left:5px;
+            -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+            box-shadow: inset 0 1px 1px rgba(0,0,0,.075);
+            -webkit-transition: border-color ease-in-out .15s,-webkit-box-shadow ease-in-out .15s;
+            -o-transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+            transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s
+        }
+        input:focus{
+            border-color: #66afe9;
+            outline: 0;
+            -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(102,175,233,.6);
+            box-shadow: inset 0 1px 1px rgba(0,0,0,.075),0 0 8px rgba(102,175,233,.6)
+        }
+    </style>
+</head>
+
+<body>
+<h2 align="center">长安大学</h2>
+<h1 align="center">毕业设计成绩评定书</h1>
+<div style="text-indent: 2em">
+    <p style="line-height: 40px">
+        <input type="text" name="academy" v-model="academy" >学院毕业设计（论文）答辩委员会于
+        <input type="date" name="time" v-model="time">审查了
+        <input type="text" name="major" v-model="major">专业学生
+        <input type="text" name="name" v-model="name">的毕业设计：
+        <input type="text" name="projectName" v-model="projectName">。</p>
+    <p style="line-height: 40px">本设计指导教师所给结构成绩（百分制）
+        <input type="text" name="gradeTeacher" v-model="gradeTeacher">；
+        评阅教师所给结构成绩（百分制）
+        <input type="text" name="gradeReviewer" v-model="gradeReviewer">；
+        答辩小组所给结构成绩（百分制）
+        <input type="text" name="gradeReply" v-model="gradeReply">；
+        院答辩委员会根据3：3：4的原则，评定该同学毕业设计百分制成绩为：
+        <input type="text" name="grade" v-model="grade">；
+        折合五级制为
+        <input type="text" name="gradeLevel" v-model="gradeLevel"> 。</p>
+    <p></p>
+    <p style="text-align: right">
+        长安大学<input type="text" name="academy" v-model="academy">学院答辩委员会
+    </p>
+    <p style="text-align: right">
+        答辩委员会主任（签名）<input type="text" name="director" v-model="director">
+    </p>
+</div>
+</body>
+<script>
+    new Vue({
+        el: "#app",
+        data: {
+            academy:'',
+            time:'',
+            major:'',
+            name:'',
+            projectName:'',
+            gradeTeacher:'',
+            gradeReviewer:'',
+            gradeReply:'',
+            grade:'',
+            gradeLevel:'',
+            director:''
+        },
+        methods: {
+            tableRowClassName({row, rowIndex}) {
+                if (rowIndex === 1) {
+                    return 'warning-row';
+                } else if (rowIndex === 3) {
+                    return 'success-row';
+                }
+                return '';
+            }
+        }
+    });
+</script>
+</html>

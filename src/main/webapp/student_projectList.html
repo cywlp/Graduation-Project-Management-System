@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>课题列表</title>
+    <link rel="stylesheet" href="element-ui/lib/theme-chalk/index.css">
+    <script src="js/vue.js"></script>
+    <script src="element-ui/lib/index.js"></script>
+    <script src="js/axios-0.18.0.js"></script>
+</head>
+<body>
+<div id="div">
+    <b style="color: #4e4e4e; font-size: 20px;">课题列表</b>
+
+    <!--查询表单-->
+    <el-form :inline="true" :model="project" class="demo-form-inline">
+        <el-form-item label="标题">
+            <el-input v-model="project.name" placeholder="标题"></el-input>
+        </el-form-item>
+        <el-form-item label="类型">
+            <el-input v-model="project.type" placeholder="类型"></el-input>
+        </el-form-item>
+        <el-form-item label="教师">
+            <el-input v-model="project.teacherName" placeholder="出题教师"></el-input>
+        </el-form-item>
+        <el-form-item>
+            <el-button type="primary" @click="onSubmit">查询</el-button>
+        </el-form-item>
+    </el-form>
+
+    <el-table :data="tableData">
+        <el-table-column prop="id" label="编号" width="120">
+        </el-table-column>
+        <el-table-column prop="name" label="标题" width="120">
+        </el-table-column>
+        <el-table-column prop="teacherName" label="出题教师" width="140">
+        </el-table-column>
+        <el-table-column prop="type" label="类型" width="140">
+        </el-table-column>
+        <el-table-column prop="origin" label="来源" width="140">
+        </el-table-column>
+        <el-table-column label="操作" width="280">
+          <template slot-scope="props">
+              <el-button type="primary" @click="showProject(props.row)">查看内容</el-button>
+              <el-button type="success" @click="applyPre(props.row)" @focus="applyCheck(props.row)" :disabled='disabledChecked'>申请选题</el-button>
+          </template>
+        </el-table-column>
+    </el-table>
+
+    <!--
+        分页组件
+          @size-change： 当改变每页条数时触发的函数
+          @current-change：当改变页码时触发的函数
+          current-page ：默认的页码
+          :page-sizes：每页条数选择框中显示的值
+          :page-size : 默认的每页条数
+          layout： 分页组件的布局
+              total（总条数）, sizes(每页条数), prev（上一页）, pager(所有的页码), next(下一页), jumper（跳转页码）
+          :total: 总条数
+    -->
+    <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="pagination.currentPage"
+            :page-sizes="[3,5,8]"
+            :page-size="pagination.pageSize"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="pagination.total">
+    </el-pagination>
+
+
+    <el-dialog title="课题信息" :visible.sync="dialogTableVisible4edit" @close="resetForm('editForm')" >
+        <!--
+            :model="project": 关联数据
+            :rules: 关联校验规则
+            ref： 在获取表单对象时使用
+        -->
+        <el-form :model="dataContent" :rules="rules" ref="editForm" label-width="100px" class="demo-ruleForm">
+            <el-form-item label="标题" prop="name">
+                <el-input v-model="dataContent.name" disabled></el-input>
+            </el-form-item>
+            <el-form-item label="出题教师" prop="teacherName">
+                <el-input v-model="dataContent.teacherName" disabled></el-input>
+            </el-form-item>
+            <el-form-item label="类型" prop="type">
+                <el-input v-model="dataContent.type" disabled></el-input>
+            </el-form-item>
+            <el-form-item label="课题内容" prop="content">
+                <el-input type="textarea" v-model="dataContent.content" disabled></el-input>
+            </el-form-item>
+        </el-form>
+    </el-dialog>
+
+</div>
+</body>
+<script>
+
+    new Vue({
+        el:"#div",
+        data:{
+            disabledChecked:false,
+            dialogTableVisible4edit: false, //编辑窗口显示状态
+            tableData:[
+                {
+                    id: '1',
+                    name: '人脸识别',
+                    teacher: '张三',
+                    type: '实践',
+                    origin: '国家级课题',
+                    content:'hhhh'
+                },
+            ],//表格数据
+            //课题模型
+            project:{
+                id:'',
+                name:'',
+                teacherName:'',
+                type:'',
+                origin: '',
+                grade:'',
+                scale:'',
+                content: ''
+            },
+            dataContent:{
+                name:'',
+                teacherName:'',
+                type:'',
+                content:''
+            },
+            pagination: {
+                currentPage: 1, //当前页
+                pageSize: 5,    //每页显示条数
+                total: 0        //总条数
+            },
+            rules: {
+                number: [
+                    {required: true, message: '请输入学号', trigger: 'blur'},
+                    {min: 2, max: 10, message: '长度在 2 到 10 个字符', trigger: 'blur'}
+                ],
+                name: [
+                    {required: true, message: '请输入姓名', trigger: 'blur'},
+                    {min: 2, max: 10, message: '长度在 2 到 10 个字符', trigger: 'blur'}
+                ],
+                birthday: [
+                    {required: true, message: '请选择日期', trigger: 'change'}
+                ],
+                address: [
+                    {required: true, message: '请输入地址', trigger: 'blur'},
+                    {min: 2, max: 200, message: '长度在 2 到 200 个字符', trigger: 'blur'}
+                ],
+            }
+        },
+        methods:{
+            onSubmit() {
+                let param = "method=selectProjectByConditions"+
+                    "&name="+this.project.name+
+                    "&type="+this.project.type+
+                    "&teacherName="+this.project.teacherName+
+                    "&currentPage="+this.pagination.currentPage+"&pageSize="+this.pagination.pageSize;
+                axios.post("studentServlet",param)
+                    .then(resp=>{
+                        //1.将查询出来的数组给tableData
+                        this.tableData=resp.data.list;
+                        //2.设置分页参数
+                        //当前页
+                        this.pagination.currentPage=resp.data.pageNum;
+                        //总条数
+                        this.pagination.total=resp.data.total;
+                    });
+            },
+            selectByPage(){
+                let param = "method=selectProjectByPage&id="+this.project.id+
+                    "&name="+this.project.name+
+                    "&teacherName="+this.project.teacherName+
+                    "&type="+this.project.type+
+                    "&origin="+this.project.origin+
+                    "&grade="+this.project.grade+
+                    "&scale="+this.project.scale+
+                    // "&content="+this.project.content+
+                    "&currentPage="+this.pagination.currentPage+"&pageSize="+this.pagination.pageSize;
+                axios.post("studentServlet",param)
+                    .then(resp=>{
+                        //1.将查询出来的数组给tableData
+                        this.tableData=resp.data.list;
+                        //2.设置分页参数
+                        //当前页
+                        this.pagination.currentPage=resp.data.pageNum;
+                        //总条数
+                        this.pagination.total=resp.data.total;
+
+                    });
+            },
+            showProject(row){
+                alert(row.id);
+                this.dialogTableVisible4edit=true;
+                let param = "method=selectContentById&id="+row.id;
+                axios.post("studentServlet",param)
+                    .then(resp=>{
+                        //1.将查询出来的数组给tableData
+                        this.dataContent={
+                            name:row.name,
+                            teacherName:row.teacherName,
+                            type:row.type,
+                            content:resp.data
+                        }
+
+                        // alert(this.dataContent.content);
+
+                    });
+                this.dataContent={
+                    name:row.name,
+                    teacherName:row.teacherName,
+                    type:row.type,
+                }
+            },
+            applyPre(row){
+                let param = "method=applyPre&id="+row.id
+                axios.post("studentServlet",param)
+                    .then(resp=>{
+                        alert(resp.data);
+                        this.selectByPage();
+                        this.applyCheck();
+                    });
+            },
+            applyCheck(){
+                alert("检查是否可选");
+                let param = "method=applyCheck"
+                axios.post("studentServlet",param)
+                    .then(resp=>{
+                        alert(resp.data);
+                        if(resp.data =='more3'){
+                            this.disabledChecked = true;
+                        }
+                    });
+            },
+            //改变每页条数时执行的函数
+            handleSizeChange(pageSize) {
+                //修改分页查询的参数
+                this.pagination.pageSize = pageSize;
+                //重新执行查询
+                this.selectByPage();
+            },
+            //改变页码时执行的函数
+            handleCurrentChange(pageNum) {
+                //修改分页查询的参数
+                this.pagination.currentPage = pageNum;
+                //重新执行查询
+                this.selectByPage();
+            },
+            resetForm(addForm) {
+                //双向绑定，输入的数据都赋值给了project， 清空project数据
+                this.project = {};
+                //清除表单的校验数据
+                this.$refs[addForm].resetFields();
+            },
+
+        },
+        mounted(){
+             this.selectByPage();
+             this.applyCheck();
+        }
+    });
+</script>
+</html>
